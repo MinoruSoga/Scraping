@@ -1,0 +1,24 @@
+import gspread
+from oauth2client.client import GoogleCredentials
+
+gc = gspread.authorize(GoogleCredentials.get_application_default())
+sh = gc.create('scrape1')
+worksheet = gc.open('scrape1').sheet1
+
+import requests
+from bs4 import BeautifulSoup
+
+url = "https://gigazine.net/"
+for i in range(5):
+  html = requests.get(url).text
+  soup = BeautifulSoup(html, "html.parser")
+  next = soup.find("div", {"id": "nextpage"})
+  url = next.find("a").attrs["href"]
+  cards = soup.find_all("div", {"class": "card"})
+  for card in cards:
+    title = card.find("h2").text.strip()
+    href = card.find("a").attrs["href"]
+    worksheet.append_row([
+        title,
+        href,
+    ])
